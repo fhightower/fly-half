@@ -23,10 +23,13 @@ work-directory/
 scenarios:
   - when: There is a ticket in "In Review" that's assigned to me
     then: Review a ticket assigned to me
+    ai_agent_notes:
+      - Only act on tickets assigned to me, not ones I'm just watching.
 ```
 
 - `when` — a natural-language description of the condition, interpreted by the agent
 - `then` — the name of the playbook to run
+- `ai_agent_notes` — optional list of free-form guidance strings for the agent (a single string is accepted and normalized to a one-item list)
 
 ### Playbooks
 

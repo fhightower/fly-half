@@ -366,6 +366,11 @@ button:disabled {
   color: var(--muted);
 }
 
+.scenario-grid .agent-notes {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .scenario-grid textarea,
 .scenario-grid select {
   width: 100%;

@@ -15,6 +15,10 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
 
   const update = (i, patch) => change(scenarios.map((s, j) => (j === i ? { ...s, ...patch } : s)))
 
+  // Notes are a list of strings, edited as one note per line; tolerate legacy single-string yaml
+  const notesToText = (n) => (Array.isArray(n) ? n.join('\n') : n || '')
+  const textToNotes = (text) => text.split('\n').filter((l) => l.trim() !== '')
+
   const save = async () => {
     setSaving(true)
     try {
@@ -69,6 +73,15 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
             >
               ✕
             </button>
+            <details className="agent-notes">
+              <summary>AI agent notes{notesToText(s.ai_agent_notes) ? ' •' : ''}</summary>
+              <textarea
+                rows={3}
+                placeholder="Notes for the agent running this scenario, one per line…"
+                value={notesToText(s.ai_agent_notes)}
+                onChange={(e) => update(i, { ai_agent_notes: textToNotes(e.target.value) })}
+              />
+            </details>
           </React.Fragment>
         ))}
       </div>

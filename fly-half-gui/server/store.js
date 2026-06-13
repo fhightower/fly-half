@@ -29,12 +29,16 @@ export class Store {
 
   readScenarios() {
     const doc = yaml.load(fs.readFileSync(this.scenariosFile, 'utf8')) || {}
-    return Array.isArray(doc.scenarios) ? doc.scenarios : []
+    if (!Array.isArray(doc.scenarios)) return []
+    return doc.scenarios.map((s) => {
+      const notes = toNotesList(s.ai_agent_notes)
+      return notes.length ? { ...s, ai_agent_notes: notes } : s
+    })
   }
 
   writeScenarios(scenarios) {
     validateScenarios(scenarios)
-    atomicWrite(this.scenariosFile, yaml.dump({ scenarios }))
+    atomicWrite(this.scenariosFile, yaml.dump({ scenarios: scenarios.map(cleanScenario) }))
   }
 
   listPlaybooks() {
@@ -162,10 +166,22 @@ export class BadRequest extends Error {
 function validateScenarios(scenarios) {
   if (!Array.isArray(scenarios)) throw new BadRequest('scenarios must be a list')
   for (const s of scenarios) {
-    if (!s || typeof s.when !== 'string' || typeof s.then !== 'string') {
+    if (
+      !s ||
+      typeof s.when !== 'string' ||
+      typeof s.then !== 'string' ||
+      !isValidNotes(s.ai_agent_notes) ||
+      !Object.keys(s).every((k) => ['when', 'then', 'ai_agent_notes'].includes(k))
+    ) {
       throw new BadRequest('each scenario needs string `when` and `then` fields')
     }
   }
+}
+
+// Canonicalize a scenario before writing: normalize notes, drop them when empty.
+function cleanScenario(s) {
+  const notes = toNotesList(s.ai_agent_notes)
+  return notes.length ? { when: s.when, then: s.then, ai_agent_notes: notes } : { when: s.when, then: s.then }
 }
 
 // A step is a plain string, or a {text} object with an optional `ai_agent_notes`

@@ -86,8 +86,38 @@ describe('scenarios', () => {
     expect(readYaml('scenarios.yaml')).toEqual({ scenarios })
   })
 
+  it('round-trips ai_agent_notes on scenarios', async () => {
+    const scenarios = [{ when: 'ticket assigned', then: 'review', ai_agent_notes: ['be careful', 'check labels'] }]
+    await request(app).put('/api/scenarios').send({ scenarios }).expect(200)
+    expect(readYaml('scenarios.yaml')).toEqual({ scenarios })
+
+    const { body: state } = await request(app).get('/api/state').expect(200)
+    expect(state.scenarios[0].ai_agent_notes).toEqual(['be careful', 'check labels'])
+  })
+
+  it('normalizes legacy single-string scenario notes and drops empties', async () => {
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: 'p', ai_agent_notes: 'one note' }] })
+      .expect(200)
+    expect(readYaml('scenarios.yaml').scenarios[0].ai_agent_notes).toEqual(['one note'])
+
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: 'p', ai_agent_notes: [] }] })
+      .expect(200)
+    expect(readYaml('scenarios.yaml').scenarios[0]).toEqual({ when: 'w', then: 'p' })
+  })
+
   it('rejects scenarios missing when/then', async () => {
     await request(app).put('/api/scenarios').send({ scenarios: [{ when: 'x' }] }).expect(400)
+  })
+
+  it('rejects malformed scenario notes', async () => {
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: 'p', ai_agent_notes: [42] }] })
+      .expect(400)
   })
 })
 
