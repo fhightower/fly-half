@@ -57,4 +57,24 @@ describe('Sidebar', () => {
     const item = screen.getByText('Scenarios').closest('button')
     expect(item.querySelector('.dirty')).not.toBeNull()
   })
+
+  it('shows how many scenarios use each playbook', () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        scenarios={[
+          { when: 'a', then: 'review_ticket' },
+          { when: 'b', then: 'review_ticket' },
+          { when: 'c', then: 'triage_bug' },
+        ]}
+      />
+    )
+    expect(screen.getByText('review_ticket').closest('button').querySelector('.usage-count').textContent).toBe('2')
+    expect(screen.getByText('triage_bug').closest('button').querySelector('.usage-count').textContent).toBe('1')
+  })
+
+  it('omits the usage badge for unused playbooks', () => {
+    render(<Sidebar {...baseProps} scenarios={[]} />)
+    expect(screen.getByText('review_ticket').closest('button').querySelector('.usage-count')).toBeNull()
+  })
 })

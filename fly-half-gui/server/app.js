@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Store, BadRequest, stepRefs } from './store.js'
+import { Store, BadRequest, stepRefs, thenPlaybooks } from './store.js'
 
 export function createApp(rootDir) {
   const store = new Store(rootDir)
@@ -14,7 +14,9 @@ export function createApp(rootDir) {
     const names = new Set(playbooks.map((p) => p.name))
     const brokenRefs = []
     for (const s of scenarios) {
-      if (!names.has(s.then)) brokenRefs.push({ type: 'scenario', when: s.when, missing: s.then })
+      for (const ref of thenPlaybooks(s.then)) {
+        if (!names.has(ref)) brokenRefs.push({ type: 'scenario', when: s.when, missing: ref })
+      }
     }
     for (const p of playbooks) {
       for (const ref of stepRefs(p.steps)) {

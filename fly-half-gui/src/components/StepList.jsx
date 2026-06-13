@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react'
+import PlaybookPreview from './PlaybookPreview.jsx'
 
 export default function StepList({ steps, playbooks, currentName, onChange, onNavigate }) {
   const [dragIndex, setDragIndex] = useState(null)
   const [focusIndex, setFocusIndex] = useState(null)
+  // Set of "stepIndex:refName" keys whose referenced playbook is expanded inline
+  const [expanded, setExpanded] = useState(() => new Set())
+  const toggleExpand = (key) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
   // {step: index, query: text typed after "[[", active: highlighted suggestion}
   const [typeahead, setTypeahead] = useState(null)
   const containerRef = useRef(null)
@@ -182,9 +191,18 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
               <div className="ref-chips">
                 {inlineRefs(stepText(step)).map((n, j) =>
                   names.has(n) ? (
-                    <button key={j} className="ref-chip" onClick={() => onNavigate(n)} title="Open">
-                      ⧉ {n}
-                    </button>
+                    <span key={j} className="ref-chip-group">
+                      <button
+                        className="ref-chip expand"
+                        onClick={() => toggleExpand(`${i}:${n}`)}
+                        title={expanded.has(`${i}:${n}`) ? 'Collapse' : 'Expand inline'}
+                      >
+                        {expanded.has(`${i}:${n}`) ? '▾' : '▸'}
+                      </button>
+                      <button className="ref-chip" onClick={() => onNavigate(n)} title="Open">
+                        ⧉ {n}
+                      </button>
+                    </span>
                   ) : (
                     <span key={j} className="ref-chip missing" title="No playbook with this name">
                       ⚠ {n} (missing)
@@ -193,6 +211,16 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
                 )}
               </div>
             )}
+            {inlineRefs(stepText(step))
+              .filter((n) => names.has(n) && expanded.has(`${i}:${n}`))
+              .map((n) => (
+                <PlaybookPreview
+                  key={n}
+                  name={n}
+                  playbooks={playbooks}
+                  seen={[currentName]}
+                />
+              ))}
             <details className="agent-notes step-notes">
               <summary>AI agent notes{notes.length ? ' •' : ''}</summary>
               <textarea

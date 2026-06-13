@@ -65,7 +65,9 @@ body {
 }
 
 .nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   width: 100%;
   text-align: left;
   padding: 7px 10px;
@@ -95,6 +97,17 @@ body {
 .dirty {
   color: var(--accent);
   margin-left: 6px;
+}
+
+.usage-count {
+  margin-left: auto;
+  font-size: 11px;
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--border);
+  color: var(--muted);
+  text-align: center;
 }
 
 .sidebar-divider {
@@ -139,6 +152,17 @@ body {
 .editor-header h2 {
   margin: 0;
   font-size: 20px;
+}
+
+.editor-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.usage-note {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .actions {
@@ -326,6 +350,63 @@ button:disabled {
   cursor: default;
 }
 
+.ref-chip-group {
+  display: inline-flex;
+}
+
+.ref-chip-group .ref-chip.expand {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  padding: 2px 6px;
+}
+
+.ref-chip-group .ref-chip:not(.expand) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Inline expansion of a referenced playbook (read-only) */
+.preview {
+  margin: 6px 0 6px 26px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--accent);
+  background: #fafaff;
+  border-radius: 0 6px 6px 0;
+}
+
+.preview.missing,
+.preview.cycle {
+  font-size: 12px;
+  color: var(--muted);
+  border-left-color: var(--border);
+}
+
+.preview-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.preview-empty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.preview-steps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
+.preview-step {
+  margin: 2px 0;
+}
+
+.preview-step .ref-chip {
+  margin-left: 6px;
+}
+
 .drag-handle {
   cursor: grab;
   color: var(--muted);
@@ -369,6 +450,45 @@ button:disabled {
 .scenario-grid .agent-notes {
   grid-column: 1 / -1;
   margin: 0;
+}
+
+.then-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.then-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-size: 12px;
+  padding: 3px 6px 3px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  color: var(--accent);
+  background: #fafaff;
+}
+
+.then-chip.missing {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.then-chip .chip-x {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.then-cell select {
+  width: 100%;
 }
 
 .scenario-grid textarea,

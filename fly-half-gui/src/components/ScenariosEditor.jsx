@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import * as api from '../api.js'
+import { thenPlaybooks } from '../refs.js'
 
 export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty, onSaved, onError }) {
   const [scenarios, setScenarios] = useState(initial)
@@ -14,6 +15,9 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
   }
 
   const update = (i, patch) => change(scenarios.map((s, j) => (j === i ? { ...s, ...patch } : s)))
+
+  // Keep yaml minimal: a single-playbook `then` stays a scalar, multiple become a list
+  const setTargets = (i, list) => update(i, { then: list.length === 1 ? list[0] : list })
 
   // Notes are a list of strings, edited as one note per line; tolerate legacy single-string yaml
   const notesToText = (n) => (Array.isArray(n) ? n.join('\n') : n || '')
@@ -48,9 +52,12 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
 
       <div className="scenario-grid">
         <div className="label">When</div>
-        <div className="label">Then run playbook</div>
+        <div className="label">Then run playbook(s)</div>
         <div />
-        {scenarios.map((s, i) => (
+        {scenarios.map((s, i) => {
+          const targets = thenPlaybooks(s.then)
+          const unused = playbooks.filter((p) => !targets.includes(p.name))
+          return (
           <React.Fragment key={i}>
             <textarea
               rows={2}
@@ -58,14 +65,31 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
               placeholder="Describe the trigger condition…"
               onChange={(e) => update(i, { when: e.target.value })}
             />
-            <select value={s.then} onChange={(e) => update(i, { then: e.target.value })}>
-              {!names.has(s.then) && <option value={s.then}>⚠ {s.then || '(none)'} (missing)</option>}
-              {playbooks.map((p) => (
-                <option key={p.name} value={p.name}>
-                  {p.name}
-                </option>
+            <div className="then-cell">
+              {targets.map((n, k) => (
+                <span key={k} className={`then-chip ${names.has(n) ? '' : 'missing'}`}>
+                  {names.has(n) ? n : `⚠ ${n} (missing)`}
+                  <button
+                    className="chip-x"
+                    onClick={() => setTargets(i, targets.filter((_, x) => x !== k))}
+                    title="Remove playbook"
+                  >
+                    ✕
+                  </button>
+                </span>
               ))}
-            </select>
+              <select
+                value=""
+                onChange={(e) => e.target.value && setTargets(i, [...targets, e.target.value])}
+              >
+                <option value="">{targets.length ? '+ Add playbook…' : 'Select a playbook…'}</option>
+                {unused.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               className="mini-btn danger"
               onClick={() => change(scenarios.filter((_, j) => j !== i))}
@@ -83,7 +107,8 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
               />
             </details>
           </React.Fragment>
-        ))}
+          )
+        })}
       </div>
 
       <div className="step-actions">

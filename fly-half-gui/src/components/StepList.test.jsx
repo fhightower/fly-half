@@ -76,6 +76,31 @@ describe('StepList', () => {
     expect(screen.getByText('⚠ nope (missing)')).toBeInTheDocument()
   })
 
+  it('expands a referenced playbook inline without navigating', async () => {
+    const withSteps = [
+      { name: 'current', steps: [] },
+      { name: 'other', steps: ['inner step one', 'inner step two'] },
+    ]
+    const onNavigate = vi.fn()
+    render(
+      <StepList
+        steps={['run [[other]]']}
+        playbooks={withSteps}
+        currentName="current"
+        onChange={vi.fn()}
+        onNavigate={onNavigate}
+      />
+    )
+    expect(screen.queryByText('inner step one')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByTitle('Expand inline'))
+    expect(screen.getByText('inner step one')).toBeInTheDocument()
+    expect(screen.getByText('inner step two')).toBeInTheDocument()
+    expect(onNavigate).not.toHaveBeenCalled()
+    // collapses again
+    await userEvent.click(screen.getByTitle('Collapse'))
+    expect(screen.queryByText('inner step one')).not.toBeInTheDocument()
+  })
+
   // Stateful wrapper so typed text accumulates (StepList is controlled)
   function StatefulList({ initial, onSteps = () => {} }) {
     const [steps, setSteps] = useState(initial)

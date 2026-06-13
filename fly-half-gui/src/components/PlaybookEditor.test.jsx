@@ -46,6 +46,21 @@ describe('PlaybookEditor', () => {
     expect(screen.getByDisplayValue('does things')).toBeInTheDocument()
   })
 
+  it('notes how many scenarios use the playbook', () => {
+    renderEditor({
+      scenarios: [
+        { when: 'a', then: 'my_pb' },
+        { when: 'b', then: 'my_pb' },
+      ],
+    })
+    expect(screen.getByText('Used by 2 scenarios')).toBeInTheDocument()
+  })
+
+  it('says when no scenario uses the playbook', () => {
+    renderEditor({ scenarios: [] })
+    expect(screen.getByText('Not used by any scenario')).toBeInTheDocument()
+  })
+
   it('generates yaml from structured state when switching tabs', async () => {
     renderEditor()
     await userEvent.click(screen.getByText('YAML'))

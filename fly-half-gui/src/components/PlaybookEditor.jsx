@@ -4,16 +4,19 @@ import CodeMirror from '@uiw/react-codemirror'
 import { yaml as yamlLang } from '@codemirror/lang-yaml'
 import * as api from '../api.js'
 import StepList from './StepList.jsx'
+import { scenarioUsage } from '../refs.js'
 
 export default function PlaybookEditor({
   playbook,
   playbooks,
+  scenarios = [],
   onDirty,
   onSaved,
   onDeleted,
   onNavigate,
   onError,
 }) {
+  const usage = scenarioUsage(scenarios, playbook.name)
   // Notes are a list of strings, edited as one note per line; tolerate legacy single-string yaml
   const notesToText = (n) => (Array.isArray(n) ? n.join('\n') : n || '')
   const textToNotes = (text) => text.split('\n').filter((l) => l.trim() !== '')
@@ -127,7 +130,14 @@ export default function PlaybookEditor({
   return (
     <div className="editor">
       <header className="editor-header">
-        <h2>{playbook.name}</h2>
+        <div className="editor-title">
+          <h2>{playbook.name}</h2>
+          <span className="usage-note">
+            {usage === 0
+              ? 'Not used by any scenario'
+              : `Used by ${usage} scenario${usage === 1 ? '' : 's'}`}
+          </span>
+        </div>
         <div className="actions">
           <button onClick={rename}>Rename</button>
           <button className="danger" onClick={remove}>

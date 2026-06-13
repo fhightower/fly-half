@@ -47,6 +47,25 @@ describe('ScenariosEditor', () => {
     expect(screen.getByText('⚠ nope (missing)')).toBeInTheDocument()
   })
 
+  it('adds a second playbook and saves a then-list', async () => {
+    const { onSaved } = renderEditor([{ when: 'w', then: 'pb_one' }])
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'pb_two')
+    await userEvent.click(screen.getByText('Save'))
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({
+      scenarios: [{ when: 'w', then: ['pb_one', 'pb_two'] }],
+    })
+    expect(onSaved).toHaveBeenCalled()
+  })
+
+  it('removes a playbook target, collapsing back to a scalar', async () => {
+    renderEditor([{ when: 'w', then: ['pb_one', 'pb_two'] }])
+    await userEvent.click(screen.getAllByTitle('Remove playbook')[0])
+    await userEvent.click(screen.getByText('Save'))
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({
+      scenarios: [{ when: 'w', then: 'pb_two' }],
+    })
+  })
+
   it('disables Save until there is a change', async () => {
     renderEditor([{ when: 'w', then: 'pb_one' }])
     expect(screen.getByText('Save')).toBeDisabled()
