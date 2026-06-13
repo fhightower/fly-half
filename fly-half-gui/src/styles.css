@@ -326,6 +326,63 @@ button:disabled {
   cursor: default;
 }
 
+.ref-chip-group {
+  display: inline-flex;
+}
+
+.ref-chip-group .ref-chip.expand {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  padding: 2px 6px;
+}
+
+.ref-chip-group .ref-chip:not(.expand) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Inline expansion of a referenced playbook (read-only) */
+.preview {
+  margin: 6px 0 6px 26px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--accent);
+  background: #fafaff;
+  border-radius: 0 6px 6px 0;
+}
+
+.preview.missing,
+.preview.cycle {
+  font-size: 12px;
+  color: var(--muted);
+  border-left-color: var(--border);
+}
+
+.preview-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.preview-empty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.preview-steps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
+.preview-step {
+  margin: 2px 0;
+}
+
+.preview-step .ref-chip {
+  margin-left: 6px;
+}
+
 .drag-handle {
   cursor: grab;
   color: var(--muted);
