@@ -9,7 +9,7 @@ import { createApp } from './app.js'
 let dir, app
 
 beforeEach(() => {
-  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'playbook-gui-'))
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fly-half-gui-'))
   app = createApp(dir)
 })
 

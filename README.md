@@ -72,6 +72,21 @@ npm run build
 node bin/cli.js /path/to/your/project   # serves on http://localhost:4242
 ```
 
+`/path/to/your/project` is the **data directory** — where `scenarios.yaml` and `playbooks/` live. It is independent of where the GUI is installed, so you can keep your scenario files anywhere and point the GUI at them:
+
+```bash
+node /opt/fly-half-gui/bin/cli.js ~/my-agent-workflows
+```
+
+If omitted, the data directory defaults to the current working directory. Either way, `scenarios.yaml` and `playbooks/` must be siblings under that one directory; missing ones are created on first run.
+
+Other flags:
+
+- `--no-open` — don't auto-open a browser
+- `PORT=<n>` — serve on a different port (default `4242`)
+
+After `npm install`, the package also exposes a `fly-half-gui` binary equivalent to `node bin/cli.js`.
+
 For development, a Vite dev server with API proxy:
 
 ```bash

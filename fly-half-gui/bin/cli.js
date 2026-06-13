@@ -9,7 +9,7 @@ const port = Number(process.env.PORT) || 4242
 const app = createApp(rootDir)
 app.listen(port, async () => {
   const url = `http://localhost:${port}`
-  console.log(`playbook-gui serving ${rootDir} at ${url}`)
+  console.log(`fly-half-gui serving ${rootDir} at ${url}`)
   if (!noOpen) {
     try {
       const { default: open } = await import('open')

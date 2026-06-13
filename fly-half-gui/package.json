@@ -1,11 +1,11 @@
 {
-  "name": "playbook-gui",
+  "name": "fly-half-gui",
   "version": "0.1.0",
   "description": "Visual editor for agent playbooks and scenarios stored as YAML files",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "playbook-gui": "bin/cli.js"
+    "fly-half-gui": "bin/cli.js"
   },
   "files": [
     "bin",
