@@ -86,7 +86,7 @@ export class Store {
   // Names of scenarios/playbooks that reference `name`
   referrers(name) {
     const scenarios = this.readScenarios()
-      .filter((s) => s.then === name)
+      .filter((s) => thenPlaybooks(s.then).includes(name))
       .map((s) => ({ type: 'scenario', when: s.when }))
     const playbooks = this.listPlaybooks()
       .filter((p) => p.name !== name && stepRefs(p.steps).includes(name))
@@ -103,7 +103,11 @@ export class Store {
     fs.rmSync(oldPath)
 
     // Auto-update all references
-    const scenarios = this.readScenarios().map((s) => (s.then === oldName ? { ...s, then: newName } : s))
+    const scenarios = this.readScenarios().map((s) => {
+      const names = thenPlaybooks(s.then)
+      if (!names.includes(oldName)) return s
+      return { ...s, then: names.map((n) => (n === oldName ? newName : n)) }
+    })
     this.writeScenarios(scenarios)
     for (const p of this.listPlaybooks()) {
       if (stepRefs(p.steps).includes(oldName)) {
@@ -163,25 +167,38 @@ export class BadRequest extends Error {
   }
 }
 
+// A scenario's `then` is one playbook name, or a list of them. Normalize to a list.
+export function thenPlaybooks(then) {
+  if (Array.isArray(then)) return then.filter((n) => typeof n === 'string' && n !== '')
+  return then ? [then] : []
+}
+
+function isValidThen(v) {
+  return typeof v === 'string' || (Array.isArray(v) && v.every((n) => typeof n === 'string'))
+}
+
 function validateScenarios(scenarios) {
   if (!Array.isArray(scenarios)) throw new BadRequest('scenarios must be a list')
   for (const s of scenarios) {
     if (
       !s ||
       typeof s.when !== 'string' ||
-      typeof s.then !== 'string' ||
+      !isValidThen(s.then) ||
       !isValidNotes(s.ai_agent_notes) ||
       !Object.keys(s).every((k) => ['when', 'then', 'ai_agent_notes'].includes(k))
     ) {
-      throw new BadRequest('each scenario needs string `when` and `then` fields')
+      throw new BadRequest('each scenario needs a string `when` and a `then` playbook name or list')
     }
   }
 }
 
-// Canonicalize a scenario before writing: normalize notes, drop them when empty.
+// Canonicalize a scenario before writing: collapse a single-playbook `then` list
+// back to a scalar, normalize notes, drop them when empty.
 function cleanScenario(s) {
+  const names = thenPlaybooks(s.then)
+  const then = names.length <= 1 ? names[0] || '' : names
   const notes = toNotesList(s.ai_agent_notes)
-  return notes.length ? { when: s.when, then: s.then, ai_agent_notes: notes } : { when: s.when, then: s.then }
+  return notes.length ? { when: s.when, then, ai_agent_notes: notes } : { when: s.when, then }
 }
 
 // A step is a plain string, or a {text} object with an optional `ai_agent_notes`

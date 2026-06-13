@@ -452,6 +452,45 @@ button:disabled {
   margin: 0;
 }
 
+.then-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.then-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-size: 12px;
+  padding: 3px 6px 3px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  color: var(--accent);
+  background: #fafaff;
+}
+
+.then-chip.missing {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.then-chip .chip-x {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.then-cell select {
+  width: 100%;
+}
+
 .scenario-grid textarea,
 .scenario-grid select {
   width: 100%;

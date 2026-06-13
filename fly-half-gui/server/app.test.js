@@ -109,8 +109,45 @@ describe('scenarios', () => {
     expect(readYaml('scenarios.yaml').scenarios[0]).toEqual({ when: 'w', then: 'p' })
   })
 
+  it('round-trips a scenario triggering multiple playbooks', async () => {
+    const scenarios = [{ when: 'release cut', then: ['notify', 'tag', 'deploy'] }]
+    await request(app).put('/api/scenarios').send({ scenarios }).expect(200)
+    expect(readYaml('scenarios.yaml')).toEqual({ scenarios })
+
+    const { body: state } = await request(app).get('/api/state').expect(200)
+    expect(state.scenarios[0].then).toEqual(['notify', 'tag', 'deploy'])
+  })
+
+  it('collapses a single-playbook then-list to a scalar and drops empties', async () => {
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: ['only', ''] }] })
+      .expect(200)
+    expect(readYaml('scenarios.yaml').scenarios[0]).toEqual({ when: 'w', then: 'only' })
+  })
+
+  it('flags every missing playbook in a then-list', async () => {
+    await request(app).put('/api/playbooks/here').send({ steps: [] }).expect(200)
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: ['here', 'gone', 'also_gone'] }] })
+      .expect(200)
+    const { body: state } = await request(app).get('/api/state').expect(200)
+    expect(state.brokenRefs).toEqual([
+      { type: 'scenario', when: 'w', missing: 'gone' },
+      { type: 'scenario', when: 'w', missing: 'also_gone' },
+    ])
+  })
+
   it('rejects scenarios missing when/then', async () => {
     await request(app).put('/api/scenarios').send({ scenarios: [{ when: 'x' }] }).expect(400)
+  })
+
+  it('rejects a then-list with non-string entries', async () => {
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: ['ok', 42] }] })
+      .expect(400)
   })
 
   it('rejects malformed scenario notes', async () => {
@@ -136,6 +173,18 @@ describe('rename', () => {
     expect(readYaml('playbooks', 'kid.yaml').name).toBe('kid')
     expect(readYaml('playbooks', 'parent.yaml').steps).toEqual(['run [[kid]]'])
     expect(readYaml('scenarios.yaml').scenarios[0].then).toBe('kid')
+  })
+
+  it('renames a playbook inside a multi-target then-list', async () => {
+    await request(app).put('/api/playbooks/child').send({ steps: [] }).expect(200)
+    await request(app).put('/api/playbooks/sibling').send({ steps: [] }).expect(200)
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: ['sibling', 'child'] }] })
+      .expect(200)
+
+    await request(app).post('/api/playbooks/child/rename').send({ newName: 'kid' }).expect(200)
+    expect(readYaml('scenarios.yaml').scenarios[0].then).toEqual(['sibling', 'kid'])
   })
 
   it('renames inline [[refs]] in step text', async () => {
@@ -179,6 +228,18 @@ describe('referrers', () => {
       { type: 'scenario', when: 'w' },
       { type: 'playbook', name: 'parent' },
     ])
+  })
+
+  it('counts a scenario that lists the playbook among several targets', async () => {
+    await request(app).put('/api/playbooks/target').send({ steps: [] }).expect(200)
+    await request(app).put('/api/playbooks/sibling').send({ steps: [] }).expect(200)
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'multi', then: ['sibling', 'target'] }] })
+      .expect(200)
+
+    const { body } = await request(app).get('/api/playbooks/target/referrers').expect(200)
+    expect(body.referrers).toEqual([{ type: 'scenario', when: 'multi' }])
   })
 
   it('counts inline [[refs]] as referrers and flags missing ones', async () => {
