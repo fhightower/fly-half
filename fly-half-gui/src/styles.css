@@ -1,0 +1,400 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #f7f7f8;
+  --panel: #ffffff;
+  --border: #e2e2e6;
+  --text: #1c1c21;
+  --muted: #6b6b76;
+  --accent: #4f46e5;
+  --danger: #dc2626;
+  --warn: #d97706;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.loading {
+  padding: 40px;
+  color: var(--muted);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.sidebar h1 {
+  font-size: 16px;
+  margin: 0 0 12px 4px;
+}
+
+.search {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.section-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 16px 4px 6px;
+}
+
+.nav-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.nav-item:hover {
+  background: var(--bg);
+}
+
+.nav-item.active {
+  background: #eef0ff;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.broken {
+  color: var(--warn);
+  margin-left: 6px;
+}
+
+.dirty {
+  color: var(--accent);
+  margin-left: 6px;
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 14px 4px;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 8px;
+}
+
+/* Main / editor */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+}
+
+.error-banner {
+  background: #fee2e2;
+  color: var(--danger);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.editor {
+  max-width: 760px;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.editor-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--bg);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+button.primary:hover {
+  background: #4338ca;
+}
+
+button.danger {
+  color: var(--danger);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mini-btn {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.description {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 0;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tabs button {
+  border: none;
+  background: none;
+  border-radius: 6px 6px 0 0;
+  padding: 8px 16px;
+  color: var(--muted);
+}
+
+.tabs button.active {
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.yaml-error {
+  color: var(--danger);
+  font-size: 12px;
+  margin-left: 12px;
+}
+
+/* Steps */
+.step-row {
+  padding: 6px 0;
+}
+
+.step-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-notes {
+  margin: 4px 0 8px;
+}
+
+.agent-notes summary {
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.agent-notes textarea {
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.step-notes {
+  margin-left: 26px;
+}
+
+.step-input-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.step-input-wrap .step-input {
+  width: 100%;
+  display: block;
+}
+
+.typeahead {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  margin: 2px 0 0;
+  padding: 4px;
+  list-style: none;
+  min-width: 220px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.typeahead li {
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.typeahead li:hover,
+.typeahead li.active {
+  background: #eef0ff;
+  color: var(--accent);
+}
+
+.ref-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0 26px;
+}
+
+.ref-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  color: var(--accent);
+  background: #fafaff;
+  cursor: pointer;
+}
+
+.ref-chip.missing {
+  border-color: var(--warn);
+  color: var(--warn);
+  cursor: default;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+}
+
+.step-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  min-height: 36px;
+  line-height: 1.4;
+}
+
+.ref-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  background: #fafaff;
+}
+
+.ref-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ref-step select {
+  flex: 1;
+  padding: 4px;
+  font: inherit;
+}
+
+.step-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Scenarios */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 220px 32px;
+  gap: 8px 12px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.scenario-grid .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.scenario-grid textarea,
+.scenario-grid select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  resize: vertical;
+}
