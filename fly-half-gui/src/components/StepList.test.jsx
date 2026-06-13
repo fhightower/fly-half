@@ -59,7 +59,8 @@ describe('StepList', () => {
   it('renders existing note lists, one per line, and collapses back to string when cleared', async () => {
     const { onChange } = renderList([{ text: 'do thing', ai_agent_notes: ['note a', 'note b'] }])
     expect(screen.getByDisplayValue('do thing')).toBeInTheDocument()
-    const notesBox = screen.getByDisplayValue('note a\nnote b')
+    const notesBox = screen.getByPlaceholderText('Notes for the agent about this step, one per line…')
+    expect(notesBox).toHaveValue('note a\nnote b')
     await userEvent.clear(notesBox)
     expect(onChange).toHaveBeenLastCalledWith(['do thing'])
   })

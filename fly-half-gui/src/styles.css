@@ -344,29 +344,6 @@ button:disabled {
   line-height: 1.4;
 }
 
-.ref-step {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 10px;
-  border: 1px dashed var(--accent);
-  border-radius: 6px;
-  background: #fafaff;
-}
-
-.ref-badge {
-  font-size: 11px;
-  text-transform: uppercase;
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.ref-step select {
-  flex: 1;
-  padding: 4px;
-  font: inherit;
-}
 
 .step-actions {
   display: flex;

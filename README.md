@@ -30,26 +30,26 @@ scenarios:
 
 ### Playbooks
 
-A playbook is an ordered list of steps. Each step is either a plain-text instruction or a reference to another playbook — playbooks nest and compose, so common procedures are written once and reused:
+A playbook is an ordered list of steps. Each step is a plain-text instruction that can reference other playbooks — playbooks nest and compose, so common procedures are written once and reused:
 
 ```yaml
 name: Review a ticket assigned to me
 description: Review a ticket that has been assigned to me
-ai_agent_notes: >-
-  Pass the PR URL/number as args. The skill runs `gh pr view --json title,body,...` + `gh pr diff`. For config-only
-  diffs the diff alone is not enough — fetch the full surrounding source to validate claims:
-  `gh api "repos/salessync/<repo>/contents/<path>?ref=<branch>" --jq '.content' | base64 -d`. Run gh from /tmp.
+ai_agent_notes:
+  - Pass the PR URL/number as args. The skill runs `gh pr view --json title,body,...` + `gh pr diff`.
+  - For config-only diffs the diff alone is not enough — fetch the full surrounding source to validate claims.
+  - Run gh from /tmp.
 
 steps:
   - Pull details for the ticket
-  - playbook: review_ticket # nested playbook reference
   - text: A step can also carry its own notes
-    ai_agent_notes: Skip this if the ticket has no description
+    ai_agent_notes:
+      - Skip this if the ticket has no description
 ```
 
-A step is a plain string, `{text, ai_agent_notes}`, or `{playbook, ai_agent_notes?}` — `ai_agent_notes` is optional free-form guidance for the executing agent.
+A step is a plain string or `{text, ai_agent_notes}` — `ai_agent_notes` is an optional list of free-form guidance strings for the executing agent (a single string is accepted and normalized to a one-item list).
 
-Step text can also embed a playbook *inline* with wiki-link syntax, for references that need surrounding context:
+Step text references other playbooks *inline* with wiki-link syntax:
 
 ```yaml
 steps:
@@ -57,29 +57,35 @@ steps:
   - Tell the new tmux agent to [[review_ticket]]
 ```
 
-Inline `[[refs]]` get the same treatment as step-level refs: renames rewrite them, deletes warn about them, and missing targets are flagged.
+Inline `[[refs]]` are first-class: renames rewrite them, deletes warn about them, and missing targets are flagged.
 
 There is deliberately no distinction between "playbooks" and "actions" — everything is a playbook, and small reusable ones serve as building blocks for larger ones.
 
 ## The GUI
 
-[`playbook-gui/`](playbook-gui/) is a local web app for visually creating, editing, and deleting scenarios and playbooks. It reads and writes the same YAML files the agents consume.
+[`fly-half-gui/`](fly-half-gui/) is a local web app for visually creating, editing, and deleting scenarios and playbooks. It reads and writes the same YAML files the agents consume.
 
 ```bash
-cd playbook-gui
+cd fly-half-gui
 npm install
 npm run build
 node bin/cli.js /path/to/your/project   # serves on http://localhost:4242
 ```
 
+For development, a Vite dev server with API proxy:
+
+```bash
+npm run dev   # UI on http://localhost:5173, API on :4242
+```
+
+Tests run with `npm test`.
+
 Features:
 
 - Sidebar library of playbooks with search, plus the scenario list
-- Structured step editor (drag to reorder, playbook-reference picker with click-through navigation) and an editable YAML source tab, kept in sync
+- Structured step editor (drag to reorder, `[[ref]]` typeahead with click-through navigation) and an editable YAML source tab, kept in sync
 - Explicit save with dirty indicators; writes are atomic so an agent never reads a half-written file
 - Renaming a playbook automatically updates every reference to it; deleting one warns you about referrers; broken references are flagged with ⚠
-
-See [playbook-gui/README.md](playbook-gui/README.md) for development setup and tests.
 
 ## Design principles
 

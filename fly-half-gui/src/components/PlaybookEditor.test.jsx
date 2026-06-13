@@ -16,7 +16,7 @@ import PlaybookEditor from './PlaybookEditor.jsx'
 const playbook = {
   name: 'my_pb',
   description: 'does things',
-  steps: ['first step', { playbook: 'other' }],
+  steps: ['first step', 'then run [[other]]'],
 }
 const playbooks = [playbook, { name: 'other', description: '', steps: [] }]
 
@@ -52,7 +52,7 @@ describe('PlaybookEditor', () => {
     expect(yaml.load(yamlBox().value)).toEqual({
       name: 'my_pb',
       description: 'does things',
-      steps: ['first step', { playbook: 'other' }],
+      steps: ['first step', 'then run [[other]]'],
     })
   })
 
@@ -102,8 +102,8 @@ describe('PlaybookEditor', () => {
     )
     expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({
       description: 'does things!',
-      ai_agent_notes: '',
-      steps: ['first step', { playbook: 'other' }],
+      ai_agent_notes: [],
+      steps: ['first step', 'then run [[other]]'],
     })
     expect(onSaved).toHaveBeenCalled()
   })
@@ -116,19 +116,19 @@ describe('PlaybookEditor', () => {
     await userEvent.click(screen.getByText('Save'))
     expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({
       description: 'updated',
-      ai_agent_notes: '',
+      ai_agent_notes: [],
       steps: ['only step'],
     })
   })
 
-  it('edits playbook-level AI agent notes and includes them in yaml', async () => {
+  it('edits playbook-level AI agent notes as a one-per-line list in yaml', async () => {
     renderEditor()
     await userEvent.type(
-      screen.getByPlaceholderText('Notes for the agent running this playbook…'),
-      'be careful'
+      screen.getByPlaceholderText('Notes for the agent running this playbook, one per line…'),
+      'be careful{Enter}be very careful'
     )
     await userEvent.click(screen.getByText('YAML'))
-    expect(yaml.load(yamlBox().value).ai_agent_notes).toBe('be careful')
+    expect(yaml.load(yamlBox().value).ai_agent_notes).toEqual(['be careful', 'be very careful'])
   })
 
   it('confirms with referrer list before delete', async () => {
