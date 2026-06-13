@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { scenarioUsage } from '../refs.js'
 
 export default function Sidebar({
   scenarios,
@@ -47,6 +48,14 @@ export default function Sidebar({
           onClick={() => onSelect({ type: 'playbook', name: p.name })}
         >
           {p.name}
+          {scenarioUsage(scenarios, p.name) > 0 && (
+            <span
+              className="usage-count"
+              title={`Used by ${scenarioUsage(scenarios, p.name)} scenario(s)`}
+            >
+              {scenarioUsage(scenarios, p.name)}
+            </span>
+          )}
           {broken.has(p.name) && <span className="broken" title="references a missing playbook">⚠</span>}
           {selection.type === 'playbook' && selection.name === p.name && dirty && (
             <span className="dirty">●</span>

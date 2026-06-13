@@ -90,6 +90,7 @@ export default function App() {
             key={playbook.name}
             playbook={playbook}
             playbooks={state.playbooks}
+            scenarios={state.scenarios}
             onDirty={setDirty}
             onSaved={async (renamedTo) => {
               setDirty(false)
