@@ -546,10 +546,15 @@ button:focus-visible {
   background: var(--panel);
   color: var(--ink);
   resize: none;
-  overflow: hidden;
+  overflow-y: auto;
   overflow-wrap: break-word;
   min-height: 38px;
-  line-height: 1.45;
+  /* 3 full lines + top of a 4th, then scroll.
+     font-size 14px · line-height 1.6 → 3.5 lines + 18 padding + 2 border */
+  max-height: calc(5.6em + 20px);
+  /* mono runs wide — cap line length + add leading so long steps read as prose */
+  max-width: 64ch;
+  line-height: 1.6;
   transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
 
@@ -863,6 +868,13 @@ button:focus-visible {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);
+}
+
+/* "When" field (direct child only — not the nested agent-notes textarea):
+   default to 3 full lines + top of a 4th, then scroll/resize.
+   font-size 13.5px · line-height 1.5 → 3.5 lines + 18 padding + 2 border */
+.scenario-grid > textarea {
+  min-height: calc(5.25em + 20px);
 }
 
 /* ── CodeMirror (YAML) ─────────────────────────────────────── */

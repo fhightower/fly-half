@@ -30,7 +30,7 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
     setFocusIndex(null)
   }, [focusIndex])
 
-  // Size the textarea to its content
+  // Grow the textarea to its content; CSS max-height caps it and scrolls past.
   const autoGrow = (el) => {
     if (!el) return
     el.style.height = 'auto'
