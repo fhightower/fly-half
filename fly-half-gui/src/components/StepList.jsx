@@ -3,6 +3,8 @@ import PlaybookPreview from './PlaybookPreview.jsx'
 
 export default function StepList({ steps, playbooks, currentName, onChange, onNavigate }) {
   const [dragIndex, setDragIndex] = useState(null)
+  // Boundary the dragged step would land at (0..steps.length); null when not dragging.
+  const [overIndex, setOverIndex] = useState(null)
   const [focusIndex, setFocusIndex] = useState(null)
   // Set of "stepIndex:refName" keys whose referenced playbook is expanded inline
   const [expanded, setExpanded] = useState(() => new Set())
@@ -118,14 +120,35 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
     }
   }
 
-  const drop = (i) => {
-    if (dragIndex === null || dragIndex === i) return
+  // While hovering a row, the insertion boundary is the row's index (top half)
+  // or the next index (bottom half), so the line tracks the cursor precisely.
+  const onRowDragOver = (e, i) => {
+    e.preventDefault()
+    if (dragIndex === null) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const after = e.clientY > rect.top + rect.height / 2
+    setOverIndex(after ? i + 1 : i)
+  }
+
+  const clearDrag = () => {
+    setDragIndex(null)
+    setOverIndex(null)
+  }
+
+  const drop = () => {
+    if (dragIndex === null || overIndex === null) return clearDrag()
     const next = [...steps]
     const [moved] = next.splice(dragIndex, 1)
-    next.splice(i, 0, moved)
+    // Removing the source shifts every later boundary left by one.
+    const insert = dragIndex < overIndex ? overIndex - 1 : overIndex
+    next.splice(insert, 0, moved)
     onChange(next)
-    setDragIndex(null)
+    clearDrag()
   }
+
+  // Hide the line at the two boundaries that wouldn't move the step.
+  const showLineAt = (i) =>
+    dragIndex !== null && overIndex === i && i !== dragIndex && i !== dragIndex + 1
 
   return (
     <div className="steps" ref={containerRef}>
@@ -133,9 +156,10 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
         const notes = stepNotes(step)
         const suggestions = typeahead?.step === i ? suggestionsFor(typeahead.query) : []
         return (
+          <React.Fragment key={i}>
+            {showLineAt(i) && <div className="drop-line" />}
           <div
-            key={i}
-            className="step-row"
+            className={`step-row ${dragIndex === i ? 'dragging' : ''}`}
             draggable
             onDragStart={(e) => {
               setDragIndex(i)
@@ -145,8 +169,9 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
               const main = e.currentTarget.querySelector('.step-main')
               if (main) e.dataTransfer?.setDragImage(main, 12, 12)
             }}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => drop(i)}
+            onDragOver={(e) => onRowDragOver(e, i)}
+            onDrop={drop}
+            onDragEnd={clearDrag}
           >
             <div className="step-main">
               <span className="drag-handle" title="Drag to reorder">
@@ -238,9 +263,11 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
               />
             </details>
           </div>
+          </React.Fragment>
         )
       })}
 
+      {showLineAt(steps.length) && <div className="drop-line" />}
       <div className="step-actions">
         <button onClick={() => onChange([...steps, ''])}>+ Step</button>
       </div>

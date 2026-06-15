@@ -468,7 +468,6 @@ button:focus-visible {
 .steps {
   display: flex;
   flex-direction: column;
-  counter-reset: step;
 }
 
 .step-row {
@@ -477,21 +476,32 @@ button:focus-visible {
   /* opaque bg: keeps native drag image self-contained so the row
      beneath doesn't bleed through the transparent ghost */
   background: var(--paper);
-  transition: background 0.13s var(--ease);
-  counter-increment: step;
+  transition: background 0.13s var(--ease), opacity 0.13s var(--ease);
 }
 
-/* zero-padded ordinal — 01 02 03 … */
-.step-main::before {
-  content: counter(step, decimal-leading-zero);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--faint);
-  padding-top: 11px;
-  min-width: 20px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.step-row.dragging {
+  opacity: 0.4;
+}
+
+/* live insertion indicator while dragging */
+.drop-line {
+  position: relative;
+  height: 2px;
+  margin: 3px 0 3px 35px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.drop-line::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateY(-50%);
 }
 
 .step-row:hover {
@@ -610,7 +620,7 @@ button:focus-visible {
 }
 
 .step-notes {
-  margin-left: 50px;
+  margin-left: 35px;
 }
 
 /* Typeahead */
@@ -651,7 +661,7 @@ button:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 6px 0 0 50px;
+  margin: 6px 0 0 35px;
 }
 
 .ref-chip {
@@ -697,7 +707,7 @@ button:focus-visible {
 
 /* Inline expansion of a referenced playbook (read-only) */
 .preview {
-  margin: 8px 0 8px 50px;
+  margin: 8px 0 8px 35px;
   padding: 11px 16px;
   border-left: 2px solid var(--accent);
   background: var(--accent-soft);
@@ -896,4 +906,41 @@ button:focus-visible {
 .main::-webkit-scrollbar-thumb:hover {
   background: var(--faint);
   background-clip: content-box;
+}
+
+/* ── Rugby-ball mark: hover wobble ─────────────────────────── */
+.sidebar h1 {
+  cursor: default;
+}
+
+.sidebar h1:hover::before {
+  animation: ball-wobble 0.7s var(--ease);
+}
+
+@keyframes ball-wobble {
+  0% {
+    transform: translateY(-1px) rotate(-28deg);
+  }
+  22% {
+    transform: translateY(-2px) rotate(-46deg);
+  }
+  52% {
+    transform: translateY(-1px) rotate(-12deg);
+  }
+  78% {
+    transform: translateY(-1px) rotate(-34deg);
+  }
+  100% {
+    transform: translateY(-1px) rotate(-28deg);
+  }
+}
+
+/* ── Respect reduced-motion ────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .editor {
+    animation: none;
+  }
+  .sidebar h1:hover::before {
+    animation: none;
+  }
 }
