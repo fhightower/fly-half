@@ -137,7 +137,14 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
             key={i}
             className="step-row"
             draggable
-            onDragStart={() => setDragIndex(i)}
+            onDragStart={(e) => {
+              setDragIndex(i)
+              // Snapshot only the step's main line for the drag ghost.
+              // The full row's border-box can bleed into the row below,
+              // dragging a phantom copy of the next step along with it.
+              const main = e.currentTarget.querySelector('.step-main')
+              if (main) e.dataTransfer?.setDragImage(main, 12, 12)
+            }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => drop(i)}
           >

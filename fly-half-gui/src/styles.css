@@ -55,6 +55,12 @@ body {
   color: #fff;
 }
 
+/* red caret — mono editor detail */
+input,
+textarea {
+  caret-color: var(--accent);
+}
+
 .app {
   display: flex;
   height: 100vh;
@@ -349,6 +355,17 @@ button:focus-visible {
   border-radius: 5px;
 }
 
+/* action buttons read as terminal commands — uppercase, tracked.
+   scoped to avoid uppercasing playbook names in nav-items / ref chips */
+.actions button,
+.step-actions button,
+.mini-btn {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
 /* ── Description + hints ───────────────────────────────────── */
 .description {
   width: 100%;
@@ -451,12 +468,30 @@ button:focus-visible {
 .steps {
   display: flex;
   flex-direction: column;
+  counter-reset: step;
 }
 
 .step-row {
   padding: 7px 0;
   border-radius: var(--r);
+  /* opaque bg: keeps native drag image self-contained so the row
+     beneath doesn't bleed through the transparent ghost */
+  background: var(--paper);
   transition: background 0.13s var(--ease);
+  counter-increment: step;
+}
+
+/* zero-padded ordinal — 01 02 03 … */
+.step-main::before {
+  content: counter(step, decimal-leading-zero);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--faint);
+  padding-top: 11px;
+  min-width: 20px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .step-row:hover {
@@ -575,7 +610,7 @@ button:focus-visible {
 }
 
 .step-notes {
-  margin-left: 35px;
+  margin-left: 50px;
 }
 
 /* Typeahead */
@@ -616,7 +651,7 @@ button:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 6px 0 0 35px;
+  margin: 6px 0 0 50px;
 }
 
 .ref-chip {
@@ -662,7 +697,7 @@ button:focus-visible {
 
 /* Inline expansion of a referenced playbook (read-only) */
 .preview {
-  margin: 8px 0 8px 35px;
+  margin: 8px 0 8px 50px;
   padding: 11px 16px;
   border-left: 2px solid var(--accent);
   background: var(--accent-soft);
