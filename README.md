@@ -1,5 +1,7 @@
 # Fly Half
 
+![Fly Half](fly-half.png)
+
 A simple, file-based system for capturing workflows ("playbooks") that AI agents act on, plus a local GUI for creating and managing them.
 
 In rugby, the fly-half reads the game and decides which play to run. Fly Half does the same for agents: an agent runs on a loop, scans a list of scenarios, and when one matches, executes the corresponding playbook.
