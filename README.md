@@ -1,7 +1,5 @@
 # Fly Half
 
-![Fly Half](fly-half.png)
-
 A simple, file-based system for capturing workflows ("playbooks") that AI agents act on, plus a local GUI for creating and managing them.
 
 In rugby, the fly-half reads the game and decides which play to run. Fly Half does the same for agents: an agent runs on a loop, scans a list of scenarios, and when one matches, executes the corresponding playbook.
@@ -30,8 +28,7 @@ scenarios:
   - when: A release is cut
     then:
       - Notify the team
-      - Tag the release
-      - Deploy to production
+      - Validate release live on prod
 ```
 
 - `when` — a natural-language description of the condition, interpreted by the agent
@@ -124,3 +121,6 @@ Features:
 - **[Agent Events](https://agentevents.io)** — an open format for scheduled and event-driven agent workflows. Each event is a directory package (`EVENT.md` with YAML frontmatter plus optional `scripts/`, `references/`, `skills/`) and the spec defines a taxonomy of eight trigger types (cron, webhooks, state changes, absence, composite, …). Fly Half covers similar ground with a deliberately smaller surface: a single free-text `when` interpreted by the agent, one central scan file instead of per-package discovery, and nested playbook composition. The two could interoperate — a Fly Half scenario + playbook maps fairly naturally onto an `EVENT.md`.
 - **[Anthropic Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)** — markdown skill packages that define *what* an agent can do; Fly Half's scenarios focus on *when* to act and playbooks sequence the steps, so skills can be referenced from playbook steps.
 - **Workflow engines (n8n, Temporal, GitHub Actions)** — deterministic, machine-executed pipelines with explicit triggers. Fly Half targets the opposite end: loosely specified, natural-language procedures executed by an LLM agent that fills in the gaps.
+
+![Fly Half](fly-half.png)
+
