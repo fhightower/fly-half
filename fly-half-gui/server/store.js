@@ -118,6 +118,47 @@ export class Store {
   }
 }
 
+// Parse the leading `---`-fenced YAML frontmatter of a markdown file.
+// Returns null when the file does not open with a frontmatter block.
+function parseFrontmatter(text) {
+  const m = text.match(/^---\n([\s\S]*?)\n---/)
+  if (!m) return null
+  const doc = yaml.load(m[1])
+  return doc && typeof doc === 'object' ? doc : null
+}
+
+// Discover skills by scanning each dir for `<dir>/<name>/SKILL.md` packages.
+// Best-effort: missing dirs, subdirs without SKILL.md, and unparseable
+// frontmatter are skipped. Deduped by name across dirs, first dir wins.
+export function scanSkills(dirs) {
+  const skills = []
+  const seen = new Set()
+  for (const dir of dirs) {
+    let entries
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true })
+    } catch {
+      continue // missing/unreadable dir
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      const source = path.join(dir, entry.name, 'SKILL.md')
+      let fm
+      try {
+        fm = parseFrontmatter(fs.readFileSync(source, 'utf8'))
+      } catch {
+        continue // no SKILL.md
+      }
+      if (!fm) continue // no/invalid frontmatter
+      const name = typeof fm.name === 'string' && fm.name ? fm.name : entry.name
+      if (seen.has(name)) continue
+      seen.add(name)
+      skills.push({ name, description: typeof fm.description === 'string' ? fm.description : '', source })
+    }
+  }
+  return skills
+}
+
 // Inline references embed a playbook inside step text: "do x then [[other_playbook]]"
 const INLINE_REF_RE = /\[\[([^\]]+)\]\]/g
 

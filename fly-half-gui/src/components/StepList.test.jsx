@@ -119,7 +119,7 @@ describe('StepList', () => {
   }
 
   const stepBox = () =>
-    screen.getAllByPlaceholderText('Describe this step… type [[ to reference a playbook')[0]
+    screen.getAllByPlaceholderText('Describe this step… [[playbook]] or /skill to reference')[0]
 
   it('opens a typeahead when typing [[ and filters by query', async () => {
     render(<StatefulList initial={['']} />)
@@ -156,5 +156,63 @@ describe('StepList', () => {
   it('has no + Playbook ref button', () => {
     renderList([])
     expect(screen.queryByText('+ Playbook ref')).not.toBeInTheDocument()
+  })
+
+  // --- skill references ---
+
+  const skills = [{ name: 'review-pr', description: 'Review a GitHub PR', source: '/s/SKILL.md' }]
+
+  function renderWithSkills(steps, onChange = vi.fn()) {
+    render(
+      <StepList
+        steps={steps}
+        playbooks={playbooks}
+        skills={skills}
+        currentName="current"
+        onChange={onChange}
+        onNavigate={vi.fn()}
+      />
+    )
+  }
+
+  it('expands a referenced skill inline to show its summary', async () => {
+    renderWithSkills(['Use /review-pr to review the PR'])
+    expect(screen.queryByText('Review a GitHub PR')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByText(/⚡ review-pr/))
+    expect(screen.getByText('Review a GitHub PR')).toBeInTheDocument()
+    // collapses again
+    await userEvent.click(screen.getByText(/⚡ review-pr/))
+    expect(screen.queryByText('Review a GitHub PR')).not.toBeInTheDocument()
+  })
+
+  it('does not render a chip for an unknown /skill', () => {
+    renderWithSkills(['run /nope and cd /tmp/x'])
+    expect(screen.queryByText(/⚡/)).not.toBeInTheDocument()
+  })
+
+  function StatefulSkillList({ initial, onSteps = () => {} }) {
+    const [steps, setSteps] = useState(initial)
+    return (
+      <StepList
+        steps={steps}
+        playbooks={playbooks}
+        skills={skills}
+        currentName="current"
+        onChange={(next) => {
+          setSteps(next)
+          onSteps(next)
+        }}
+        onNavigate={() => {}}
+      />
+    )
+  }
+
+  it('opens a / typeahead suggesting skills and inserts /name on click', async () => {
+    const onSteps = vi.fn()
+    render(<StatefulSkillList initial={['']} onSteps={onSteps} />)
+    await userEvent.type(stepBox(), 'Use /rev')
+    expect(screen.getByRole('option', { name: 'review-pr' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('option', { name: 'review-pr' }))
+    expect(onSteps).toHaveBeenLastCalledWith(['Use /review-pr'])
   })
 })
