@@ -156,6 +156,30 @@ describe('scenarios', () => {
       .send({ scenarios: [{ when: 'w', then: 'p', ai_agent_notes: [42] }] })
       .expect(400)
   })
+
+  it('round-trips a disabled scenario', async () => {
+    const scenarios = [{ when: 'ticket assigned', then: 'review', disabled: true }]
+    await request(app).put('/api/scenarios').send({ scenarios }).expect(200)
+    expect(readYaml('scenarios.yaml')).toEqual({ scenarios })
+
+    const { body: state } = await request(app).get('/api/state').expect(200)
+    expect(state.scenarios[0].disabled).toBe(true)
+  })
+
+  it('omits the disabled flag when false', async () => {
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: 'p', disabled: false }] })
+      .expect(200)
+    expect(readYaml('scenarios.yaml').scenarios[0]).toEqual({ when: 'w', then: 'p' })
+  })
+
+  it('rejects a non-boolean disabled flag', async () => {
+    await request(app)
+      .put('/api/scenarios')
+      .send({ scenarios: [{ when: 'w', then: 'p', disabled: 'yes' }] })
+      .expect(400)
+  })
 })
 
 describe('rename', () => {

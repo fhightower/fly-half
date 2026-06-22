@@ -34,6 +34,7 @@ scenarios:
 - `when` — a natural-language description of the condition, interpreted by the agent
 - `then` — the playbook to run, or a list of playbooks to run in order (a single name is kept as a scalar)
 - `ai_agent_notes` — optional list of free-form guidance strings for the agent (a single string is accepted and normalized to a one-item list)
+- `disabled` — optional boolean. When `true`, agents skip the scenario; the field is absent on active scenarios. This lets you turn a scenario off without deleting it (toggle it from the GUI), and is backward compatible — a scenario with no `disabled` field is enabled.
 
 ### Playbooks
 

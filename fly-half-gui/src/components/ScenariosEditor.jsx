@@ -16,6 +16,18 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
 
   const update = (i, patch) => change(scenarios.map((s, j) => (j === i ? { ...s, ...patch } : s)))
 
+  // Flip enabled state. Enabling drops the `disabled` key entirely so an active
+  // scenario carries no flag (matches the minimal yaml the server writes back).
+  const toggle = (i) =>
+    change(
+      scenarios.map((s, j) => {
+        if (j !== i) return s
+        if (!s.disabled) return { ...s, disabled: true }
+        const { disabled, ...rest } = s
+        return rest
+      })
+    )
+
   // Keep yaml minimal: a single-playbook `then` stays a scalar, multiple become a list
   const setTargets = (i, list) => update(i, { then: list.length === 1 ? list[0] : list })
 
@@ -61,11 +73,12 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
           <React.Fragment key={i}>
             <textarea
               rows={2}
+              className={s.disabled ? 'disabled' : undefined}
               value={s.when}
               placeholder="Describe the trigger condition…"
               onChange={(e) => update(i, { when: e.target.value })}
             />
-            <div className="then-cell">
+            <div className={`then-cell ${s.disabled ? 'disabled' : ''}`}>
               {targets.map((n, k) => (
                 <span key={k} className={`then-chip ${names.has(n) ? '' : 'missing'}`}>
                   {names.has(n) ? n : `⚠ ${n} (missing)`}
@@ -90,14 +103,24 @@ export default function ScenariosEditor({ scenarios: initial, playbooks, onDirty
                 ))}
               </select>
             </div>
-            <button
-              className="mini-btn danger"
-              onClick={() => change(scenarios.filter((_, j) => j !== i))}
-              title="Delete scenario"
-            >
-              ✕
-            </button>
-            <details className="agent-notes">
+            <div className="scenario-actions">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={!s.disabled}
+                className={`switch ${s.disabled ? '' : 'on'}`}
+                onClick={() => toggle(i)}
+                title={s.disabled ? 'Enable scenario' : 'Disable scenario'}
+              />
+              <button
+                className="mini-btn danger"
+                onClick={() => change(scenarios.filter((_, j) => j !== i))}
+                title="Delete scenario"
+              >
+                ✕
+              </button>
+            </div>
+            <details className={`agent-notes ${s.disabled ? 'disabled' : ''}`}>
               <summary>AI agent notes{notesToText(s.ai_agent_notes) ? ' •' : ''}</summary>
               <textarea
                 rows={3}
