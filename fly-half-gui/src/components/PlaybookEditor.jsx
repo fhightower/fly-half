@@ -9,6 +9,7 @@ import { scenarioUsage } from '../refs.js'
 export default function PlaybookEditor({
   playbook,
   playbooks,
+  skills = [],
   scenarios = [],
   onDirty,
   onSaved,
@@ -189,6 +190,7 @@ export default function PlaybookEditor({
         <StepList
           steps={steps}
           playbooks={playbooks}
+          skills={skills}
           currentName={playbook.name}
           onChange={(next) => {
             setSteps(next)

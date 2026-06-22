@@ -756,6 +756,31 @@ button:focus-visible {
   margin-left: 6px;
 }
 
+/* Skill references get a distinct hue so they read apart from playbook chips */
+.ref-chip.skill {
+  border-color: #d6cdf0;
+  color: #6b4fbb;
+  background: #f1edfb;
+}
+
+.ref-chip.skill:hover {
+  background: #e7e0f7;
+  border-color: #6b4fbb;
+}
+
+.skill-preview {
+  border-left-color: #6b4fbb;
+  background: #f1edfb;
+}
+
+.skill-source {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--faint);
+  margin-top: 6px;
+  word-break: break-all;
+}
+
 .step-actions {
   display: flex;
   gap: 8px;

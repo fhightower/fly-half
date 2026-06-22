@@ -256,3 +256,36 @@ describe('referrers', () => {
     expect(state.brokenRefs).toEqual([{ type: 'playbook', name: 'parent', missing: 'nonexistent' }])
   })
 })
+
+describe('skills', () => {
+  function writeSkill(skillsDir, name, frontmatter) {
+    const d = path.join(skillsDir, name)
+    fs.mkdirSync(d, { recursive: true })
+    fs.writeFileSync(path.join(d, 'SKILL.md'), `---\n${frontmatter}\n---\nbody\n`)
+  }
+
+  it('returns an empty skills list when none are configured', async () => {
+    const { body } = await request(app).get('/api/state').expect(200)
+    expect(body.skills).toEqual([])
+  })
+
+  it('exposes skills discovered in a --skills-dir directory', async () => {
+    const skillsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fly-half-skilldir-'))
+    writeSkill(skillsDir, 'review-pr', 'name: review-pr\ndescription: Review a GitHub PR')
+    const appWithSkills = createApp(dir, { skillDirs: [skillsDir] })
+
+    const { body } = await request(appWithSkills).get('/api/state').expect(200)
+    expect(body.skills).toContainEqual(
+      expect.objectContaining({ name: 'review-pr', description: 'Review a GitHub PR' })
+    )
+  })
+
+  it('does not flag /skill tokens in step text as broken refs', async () => {
+    await request(app)
+      .put('/api/playbooks/uses-skill')
+      .send({ steps: ['Use /review-pr to review the PR'] })
+      .expect(200)
+    const { body } = await request(app).get('/api/state').expect(200)
+    expect(body.brokenRefs).toEqual([])
+  })
+})

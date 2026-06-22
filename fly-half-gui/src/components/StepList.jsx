@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import PlaybookPreview from './PlaybookPreview.jsx'
+import SkillPreview from './SkillPreview.jsx'
+import { skillRefs } from '../refs.js'
 
-export default function StepList({ steps, playbooks, currentName, onChange, onNavigate }) {
+export default function StepList({ steps, playbooks, skills = [], currentName, onChange, onNavigate }) {
   const [dragIndex, setDragIndex] = useState(null)
   // Boundary the dragged step would land at (0..steps.length); null when not dragging.
   const [overIndex, setOverIndex] = useState(null)
@@ -20,6 +22,8 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
   const textareaRefs = useRef({})
   const names = new Set(playbooks.map((p) => p.name))
   const refTargets = playbooks.filter((p) => p.name !== currentName).map((p) => p.name)
+  const skillNames = new Set(skills.map((s) => s.name))
+  const skillByName = new Map(skills.map((s) => [s.name, s]))
 
   useEffect(() => {
     if (focusIndex === null) return
@@ -61,23 +65,35 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
     update(i, raw ? { text: stepText(s), ai_agent_notes: raw.split('\n') } : stepText(s))
   }
 
-  // An unclosed "[[query" immediately before the cursor opens the typeahead
+  // An unclosed "[[query" opens the playbook typeahead; a "/query" at a word
+  // boundary opens the skill typeahead. `kind` drives suggestions and insertion.
   const detectTypeahead = (i, el) => {
     const upToCursor = el.value.slice(0, el.selectionStart)
-    const match = upToCursor.match(/\[\[([^\][]*)$/)
-    setTypeahead(match ? { step: i, query: match[1], active: 0 } : null)
+    const pb = upToCursor.match(/\[\[([^\][]*)$/)
+    if (pb) return setTypeahead({ step: i, query: pb[1], active: 0, kind: 'playbook' })
+    const sk = upToCursor.match(/(?:^|\s)\/([\w:-]*)$/)
+    if (sk) return setTypeahead({ step: i, query: sk[1], active: 0, kind: 'skill' })
+    setTypeahead(null)
   }
 
-  const suggestionsFor = (query) =>
-    refTargets.filter((n) => n.toLowerCase().includes(query.toLowerCase()))
+  const suggestionsFor = (query, kind) => {
+    const pool = kind === 'skill' ? [...skillNames] : refTargets
+    return pool.filter((n) => n.toLowerCase().includes(query.toLowerCase()))
+  }
 
-  // Replace the open "[[query" before the cursor with "[[name]]"
-  const acceptSuggestion = (i, name) => {
+  // Replace the open "[[query" with "[[name]]", or the open "/query" with "/name"
+  const acceptSuggestion = (i, name, kind) => {
     const el = textareaRefs.current[i]
     const text = stepText(steps[i])
     const cursor = el?.selectionStart ?? text.length
-    const start = text.slice(0, cursor).lastIndexOf('[[')
-    setText(i, `${text.slice(0, start)}[[${name}]]${text.slice(cursor)}`)
+    const before = text.slice(0, cursor)
+    if (kind === 'skill') {
+      const start = before.lastIndexOf('/')
+      setText(i, `${text.slice(0, start)}/${name}${text.slice(cursor)}`)
+    } else {
+      const start = before.lastIndexOf('[[')
+      setText(i, `${text.slice(0, start)}[[${name}]]${text.slice(cursor)}`)
+    }
     setTypeahead(null)
     el?.focus()
   }
@@ -90,7 +106,7 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
 
   const onStepKeyDown = (e, i) => {
     if (typeahead?.step === i) {
-      const suggestions = suggestionsFor(typeahead.query)
+      const suggestions = suggestionsFor(typeahead.query, typeahead.kind)
       if (e.key === 'ArrowDown' && suggestions.length) {
         e.preventDefault()
         setTypeahead({ ...typeahead, active: (typeahead.active + 1) % suggestions.length })
@@ -106,7 +122,7 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
       }
       if ((e.key === 'Enter' || e.key === 'Tab') && suggestions.length) {
         e.preventDefault()
-        acceptSuggestion(i, suggestions[typeahead.active] || suggestions[0])
+        acceptSuggestion(i, suggestions[typeahead.active] || suggestions[0], typeahead.kind)
         return
       }
       if (e.key === 'Escape') {
@@ -154,7 +170,8 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
     <div className="steps" ref={containerRef}>
       {steps.map((step, i) => {
         const notes = stepNotes(step)
-        const suggestions = typeahead?.step === i ? suggestionsFor(typeahead.query) : []
+        const suggestions =
+          typeahead?.step === i ? suggestionsFor(typeahead.query, typeahead.kind) : []
         return (
           <React.Fragment key={i}>
             {showLineAt(i) && <div className="drop-line" />}
@@ -182,7 +199,7 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
                   className="step-input"
                   rows={1}
                   value={stepText(step)}
-                  placeholder="Describe this step… type [[ to reference a playbook"
+                  placeholder="Describe this step… [[playbook]] or /skill to reference"
                   ref={(el) => {
                     textareaRefs.current[i] = el
                     autoGrow(el)
@@ -206,7 +223,7 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
                         // mousedown fires before the textarea's blur
                         onMouseDown={(e) => {
                           e.preventDefault()
-                          acceptSuggestion(i, n)
+                          acceptSuggestion(i, n, typeahead.kind)
                         }}
                       >
                         {n}
@@ -219,11 +236,12 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
                 ✕
               </button>
             </div>
-            {inlineRefs(stepText(step)).length > 0 && (
+            {(inlineRefs(stepText(step)).length > 0 ||
+              skillRefs(stepText(step), skillNames).length > 0) && (
               <div className="ref-chips">
                 {inlineRefs(stepText(step)).map((n, j) =>
                   names.has(n) ? (
-                    <span key={j} className="ref-chip-group">
+                    <span key={`p${j}`} className="ref-chip-group">
                       <button
                         className="ref-chip expand"
                         onClick={() => toggleExpand(`${i}:${n}`)}
@@ -236,11 +254,21 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
                       </button>
                     </span>
                   ) : (
-                    <span key={j} className="ref-chip missing" title="No playbook with this name">
+                    <span key={`p${j}`} className="ref-chip missing" title="No playbook with this name">
                       ⚠ {n} (missing)
                     </span>
                   )
                 )}
+                {skillRefs(stepText(step), skillNames).map((n, j) => (
+                  <button
+                    key={`s${j}`}
+                    className="ref-chip skill"
+                    onClick={() => toggleExpand(`${i}:skill:${n}`)}
+                    title={expanded.has(`${i}:skill:${n}`) ? 'Collapse' : 'Expand inline'}
+                  >
+                    {expanded.has(`${i}:skill:${n}`) ? '▾' : '▸'} ⚡ {n}
+                  </button>
+                ))}
               </div>
             )}
             {inlineRefs(stepText(step))
@@ -252,6 +280,11 @@ export default function StepList({ steps, playbooks, currentName, onChange, onNa
                   playbooks={playbooks}
                   seen={[currentName]}
                 />
+              ))}
+            {skillRefs(stepText(step), skillNames)
+              .filter((n) => expanded.has(`${i}:skill:${n}`))
+              .map((n) => (
+                <SkillPreview key={`skill-${n}`} skill={skillByName.get(n)} />
               ))}
             <details className="agent-notes step-notes">
               <summary>AI agent notes{notes.length ? ' •' : ''}</summary>

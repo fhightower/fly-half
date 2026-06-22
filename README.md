@@ -66,6 +66,15 @@ steps:
 
 Inline `[[refs]]` are first-class: renames rewrite them, deletes warn about them, and missing targets are flagged.
 
+A step can also reference a **skill** (an [Anthropic Agent Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)) with slash-command syntax, `/skill-name`:
+
+```yaml
+steps:
+  - Use /review-pr to review the PR, then [[notify_team]]
+```
+
+Only a `/token` that names a discovered skill is treated as a reference (so paths and prose like `/tmp/x` or `and/or` are left alone). In the GUI a skill reference shows an expandable chip that previews the skill's summary inline, the same way a referenced playbook expands. Skills are read-only — Fly Half never edits a skill file.
+
 There is deliberately no distinction between "playbooks" and "actions" — everything is a playbook, and small reusable ones serve as building blocks for larger ones.
 
 ## The GUI
@@ -90,6 +99,7 @@ If omitted, the data directory defaults to the current working directory. Either
 Other flags:
 
 - `--no-open` — don't auto-open a browser
+- `--skills-dir <path>` — scan an additional directory for skills (repeatable). Each skill is a `<name>/SKILL.md` package with `name` and `description` frontmatter. The user's global skills directory (`~/.claude/skills`) is always scanned.
 - `PORT=<n>` — serve on a different port (default `4242`)
 
 After `npm install`, the package also exposes a `fly-half-gui` binary equivalent to `node bin/cli.js`.
@@ -119,7 +129,7 @@ Features:
 ## Similar libraries
 
 - **[Agent Events](https://agentevents.io)** — an open format for scheduled and event-driven agent workflows. Each event is a directory package (`EVENT.md` with YAML frontmatter plus optional `scripts/`, `references/`, `skills/`) and the spec defines a taxonomy of eight trigger types (cron, webhooks, state changes, absence, composite, …). Fly Half covers similar ground with a deliberately smaller surface: a single free-text `when` interpreted by the agent, one central scan file instead of per-package discovery, and nested playbook composition. The two could interoperate — a Fly Half scenario + playbook maps fairly naturally onto an `EVENT.md`.
-- **[Anthropic Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)** — markdown skill packages that define *what* an agent can do; Fly Half's scenarios focus on *when* to act and playbooks sequence the steps, so skills can be referenced from playbook steps.
+- **[Anthropic Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)** — markdown skill packages that define *what* an agent can do; Fly Half's scenarios focus on *when* to act and playbooks sequence the steps. Skills are referenced from playbook steps with `/skill-name`, and the GUI previews their summaries inline.
 - **Workflow engines (n8n, Temporal, GitHub Actions)** — deterministic, machine-executed pipelines with explicit triggers. Fly Half targets the opposite end: loosely specified, natural-language procedures executed by an LLM agent that fills in the gaps.
 
 ![Fly Half](fly-half.png)

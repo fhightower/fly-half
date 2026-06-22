@@ -1,16 +1,21 @@
 import express from 'express'
 import path from 'node:path'
+import os from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { Store, BadRequest, stepRefs, thenPlaybooks } from './store.js'
+import { Store, BadRequest, stepRefs, thenPlaybooks, scanSkills } from './store.js'
 
-export function createApp(rootDir) {
+export function createApp(rootDir, { skillDirs = [] } = {}) {
   const store = new Store(rootDir)
+  // The user's global skills dir is always scanned, ahead of any --skills-dir
+  // entries, so it wins on name collisions.
+  const allSkillDirs = [path.join(os.homedir(), '.claude', 'skills'), ...skillDirs]
   const app = express()
   app.use(express.json())
 
   app.get('/api/state', (req, res) => {
     const playbooks = store.listPlaybooks()
     const scenarios = store.readScenarios()
+    const skills = scanSkills(allSkillDirs)
     const names = new Set(playbooks.map((p) => p.name))
     const brokenRefs = []
     for (const s of scenarios) {
@@ -23,7 +28,7 @@ export function createApp(rootDir) {
         if (!names.has(ref)) brokenRefs.push({ type: 'playbook', name: p.name, missing: ref })
       }
     }
-    res.json({ scenarios, playbooks, brokenRefs })
+    res.json({ scenarios, playbooks, skills, brokenRefs })
   })
 
   app.put('/api/scenarios', (req, res) => {
