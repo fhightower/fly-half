@@ -87,6 +87,36 @@ describe('ScenariosEditor', () => {
     expect(onSaved).toHaveBeenCalled()
   })
 
+  it('toggles a scenario off and saves disabled: true', async () => {
+    renderEditor([{ when: 'w', then: 'pb_one' }])
+    await userEvent.click(screen.getByTitle('Disable scenario'))
+    await userEvent.click(screen.getByText('Save'))
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({
+      scenarios: [{ when: 'w', then: 'pb_one', disabled: true }],
+    })
+  })
+
+  it('toggles a disabled scenario back on, dropping the flag', async () => {
+    renderEditor([{ when: 'w', then: 'pb_one', disabled: true }])
+    await userEvent.click(screen.getByTitle('Enable scenario'))
+    await userEvent.click(screen.getByText('Save'))
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({
+      scenarios: [{ when: 'w', then: 'pb_one' }],
+    })
+  })
+
+  it('dims a disabled scenario row', () => {
+    renderEditor([{ when: 'w', then: 'pb_one', disabled: true }])
+    expect(screen.getByDisplayValue('w')).toHaveClass('disabled')
+    expect(screen.getByTitle('Enable scenario')).toBeInTheDocument()
+  })
+
+  it('creates new scenarios enabled', async () => {
+    renderEditor([])
+    await userEvent.click(screen.getByText('+ Scenario'))
+    expect(screen.getByTitle('Disable scenario')).toBeInTheDocument()
+  })
+
   it('reports save errors', async () => {
     global.fetch.mockResolvedValue({
       ok: false,

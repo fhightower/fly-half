@@ -218,6 +218,11 @@ function isValidThen(v) {
   return typeof v === 'string' || (Array.isArray(v) && v.every((n) => typeof n === 'string'))
 }
 
+// A scenario's `disabled` flag is optional and, when present, a boolean.
+function isValidDisabled(v) {
+  return v === undefined || typeof v === 'boolean'
+}
+
 function validateScenarios(scenarios) {
   if (!Array.isArray(scenarios)) throw new BadRequest('scenarios must be a list')
   for (const s of scenarios) {
@@ -226,7 +231,8 @@ function validateScenarios(scenarios) {
       typeof s.when !== 'string' ||
       !isValidThen(s.then) ||
       !isValidNotes(s.ai_agent_notes) ||
-      !Object.keys(s).every((k) => ['when', 'then', 'ai_agent_notes'].includes(k))
+      !isValidDisabled(s.disabled) ||
+      !Object.keys(s).every((k) => ['when', 'then', 'disabled', 'ai_agent_notes'].includes(k))
     ) {
       throw new BadRequest('each scenario needs a string `when` and a `then` playbook name or list')
     }
@@ -234,12 +240,16 @@ function validateScenarios(scenarios) {
 }
 
 // Canonicalize a scenario before writing: collapse a single-playbook `then` list
-// back to a scalar, normalize notes, drop them when empty.
+// back to a scalar, keep `disabled` only when true, normalize notes, drop them
+// when empty.
 function cleanScenario(s) {
   const names = thenPlaybooks(s.then)
   const then = names.length <= 1 ? names[0] || '' : names
   const notes = toNotesList(s.ai_agent_notes)
-  return notes.length ? { when: s.when, then, ai_agent_notes: notes } : { when: s.when, then }
+  const out = { when: s.when, then }
+  if (s.disabled) out.disabled = true
+  if (notes.length) out.ai_agent_notes = notes
+  return out
 }
 
 // A step is a plain string, or a {text} object with an optional `ai_agent_notes`
